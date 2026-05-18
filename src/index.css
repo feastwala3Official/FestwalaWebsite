@@ -1,0 +1,112 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #0a0500;
+  --deep: #110800;
+  --brown: #1a0a00;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-dim: #8a6e2a;
+  --cream: #f5e6c8;
+  --cream-dim: #c8b89a;
+  --white: #fff8f0;
+  --red: #c0392b;
+  --green: #27ae60;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius: 12px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--black);
+  color: var(--cream);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── Custom cursor — visible everywhere including modals, admin, light sections ── */
+.cursor-dot {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  top: -20px; left: -20px;        /* start offscreen, not 0,0 */
+  pointer-events: none;
+  z-index: 2147483647;             /* max z-index — above everything */
+  transform: translate(-50%, -50%);
+  transition: width 0.15s, height 0.15s, background 0.15s;
+  mix-blend-mode: normal;
+}
+.cursor-ring {
+  width: 30px; height: 30px;
+  border: 1.5px solid var(--gold);
+  border-radius: 50%;
+  position: fixed;
+  top: -20px; left: -20px;
+  pointer-events: none;
+  z-index: 2147483646;
+  transform: translate(-50%, -50%);
+  transition: left 0.1s ease, top 0.1s ease, width 0.2s, height 0.2s, border-color 0.2s;
+  opacity: 0.75;
+}
+
+/* Cursor grows on hover over clickable elements */
+button:hover ~ .cursor-dot, a:hover ~ .cursor-dot { width: 12px; height: 12px; }
+
+/* Force cursor:none on ALL interactive elements site-wide */
+*, *::before, *::after { cursor: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--deep); }
+::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
+
+/* Marquee */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-inner { animation: marquee 24s linear infinite; display: flex; white-space: nowrap; }
+
+/* Animations */
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes shimmer  { 0%,100% { background-position: -200% center; } 50% { background-position: 200% center; } }
+@keyframes pulse    { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes spin     { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes breathe  { 0%,100% { box-shadow: 0 0 20px rgba(201,168,76,0.15); } 50% { box-shadow: 0 0 45px rgba(201,168,76,0.45); } }
+@keyframes floatUp  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes goldPulse{ 0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); } 70% { box-shadow: 0 0 0 10px rgba(201,168,76,0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn  { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+.fade-up   { animation: fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+.fade-in   { animation: fadeIn 0.4s ease both; }
+.fade-left { animation: fadeLeft 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+.scale-in  { animation: scaleIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Utility */
+.gold { color: var(--gold); }
+.cream { color: var(--cream); }
+
+/* ── Menu item cards — NO vertical shift on category switch ── */
+/* Cards use opacity + scale only, NOT translateY, so layout never jumps */
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.2rem; }
+.menu-card {
+  opacity: 0;
+  transform: scale(0.96);
+  animation: cardAppear 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes cardAppear {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Section reveal — uses opacity + translateY but ONLY for initial page scroll, not card switching */
+.reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Admin — light bg areas still get cursor:none via the * rule above */
+/* Input/select/textarea retain cursor:none too */
+input, select, textarea, button, a { cursor: none !important; }
