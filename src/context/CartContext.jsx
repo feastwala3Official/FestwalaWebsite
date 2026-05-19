@@ -34,7 +34,7 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [], open: false })
 
   const subtotal = state.items.reduce((sum, i) => sum + i.price * i.qty, 0)
-  const deliveryCharge = subtotal >= CONFIG.maxDeliveryKm ? 0 : 50
+  const deliveryCharge = subtotal >= 269 ? 0 : 50
   const deliveryFree = subtotal >= 269
   const grandTotal = subtotal + (deliveryFree ? 0 : 50)
   const itemCount = state.items.reduce((sum, i) => sum + i.qty, 0)

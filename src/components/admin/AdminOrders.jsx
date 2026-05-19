@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 
 const STATUS_COLORS = { pending: '#e67e22', accepted: '#3498db', dispatched: '#9b59b6', delivered: '#27ae60', cancelled: '#c0392b' }
 
-export default function AdminOrders({ orders, setOrders }) {
+export default function AdminOrders({ orders, setOrders, onStatusChange }) {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [showManual, setShowManual] = useState(false)
@@ -58,7 +58,7 @@ export default function AdminOrders({ orders, setOrders }) {
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#c8b89a' }}>No orders found</div>
         ) : filtered.map(order => (
-          <OrderCard key={order.id} order={order} onStatusChange={updateStatus} />
+          <OrderCard key={order.id} order={order} onStatusChange={updateStatus} onWhatsApp={onStatusChange} />
         ))}
       </div>
 
@@ -67,7 +67,7 @@ export default function AdminOrders({ orders, setOrders }) {
   )
 }
 
-function OrderCard({ order, onStatusChange }) {
+function OrderCard({ order, onStatusChange, onWhatsApp }) {
   const [open, setOpen] = useState(false)
   const items = Array.isArray(order.items) ? order.items : []
 
@@ -97,7 +97,7 @@ function OrderCard({ order, onStatusChange }) {
           </div>
           {order.address && <p style={{ color: '#c8b89a', fontSize: '13px', marginBottom: '1rem' }}>📍 {order.address}</p>}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <select value={order.status} onChange={e => onStatusChange(order.id, e.target.value)}
+            <select value={order.status} onChange={e => { onStatusChange(order.id, e.target.value); if (onWhatsApp) onWhatsApp(order, e.target.value) }}
               style={{ background: '#1a0a00', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '6px', padding: '8px 12px', color: '#c9a84c', fontFamily: 'DM Sans', fontSize: '13px' }}>
               {['pending','accepted','dispatched','delivered','cancelled'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
             </select>

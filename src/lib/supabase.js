@@ -13,12 +13,58 @@ export const CLOUDINARY = {
   video2: 'https://res.cloudinary.com/dnd4tnx2a/video/upload/v1779093582/WhatsApp_Video_2026-05-13_at_13.50.24_1_bjlpuk.mp4'
 }
 
+export const OUTLETS = [
+  {
+    name: 'FeastWala',
+    area: 'Malviya Nagar',
+    lat: 28.530679,
+    lng: 77.207624,
+    address: 'Malviya Nagar, New Delhi',
+    whatsapp: '919711386962',
+    maxDeliveryKm: 7
+  },
+  {
+    name: 'Maa Ki Thali',
+    area: 'Kishangarh',
+    lat: 28.522287,
+    lng: 77.169902,
+    address: 'Kishangarh, New Delhi',
+    whatsapp: '919217291488',
+    maxDeliveryKm: 7
+  }
+]
+
 export const CONFIG = {
   whatsapp: '919711386962',
   whatsapp2: '919217291488',
   outletLat: 28.5355,
   outletLng: 77.2100,
   maxDeliveryKm: 15,
-  razorpayKey: 'rzp_test_REPLACE_WITH_YOUR_KEY',
+  razorpayKey: 'rzp_test_Sr90tBXtzzgTFE',
   sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL'
+}
+
+export function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371, toR = d => d * Math.PI / 180
+  const dLat = toR(lat2 - lat1), dLng = toR(lng2 - lng1)
+  const a = Math.sin(dLat/2)**2 + Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLng/2)**2
+  return R * 2 * Math.asin(Math.sqrt(a))
+}
+
+export function checkDeliveryZone(lat, lng) {
+  let nearest = null, minDist = Infinity
+  for (const outlet of OUTLETS) {
+    const dist = getDistance(lat, lng, outlet.lat, outlet.lng)
+    if (dist < minDist) { minDist = dist; nearest = outlet }
+  }
+  return {
+    outlet: nearest,
+    distance: Math.round(minDist * 10) / 10,
+    canDeliver: minDist <= nearest.maxDeliveryKm
+  }
+}
+
+export function applyDiscount(price, pct) {
+  if (!pct || pct <= 0) return price
+  return Math.round(price * (1 - pct / 100))
 }

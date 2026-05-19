@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase, CLOUDINARY, CONFIG } from '../lib/supabase'
+import { supabase, CLOUDINARY, CONFIG, applyDiscount } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
 import toast from 'react-hot-toast'
 import CartSidebar from '../components/CartSidebar'
@@ -89,20 +89,40 @@ export default function Website() {
     }, {})
   }
 
+  function getDiscountedItem(item) {
+    const brand = item.brand
+    const globalPct = settings?.global_discount_pct || 0
+    const brandPct = brand === 'thali' ? (settings?.thali_discount_pct || 0) : (settings?.chinese_discount_pct || 0)
+    const pct = Math.max(globalPct, brandPct)
+    if (!pct) return item
+    return {
+      ...item,
+      price: item.price ? applyDiscount(item.price, pct) : null,
+      half_price: item.half_price ? applyDiscount(item.half_price, pct) : null,
+      full_price: item.full_price ? applyDiscount(item.full_price, pct) : null,
+      originalPrice: item.price || null,
+      originalHalfPrice: item.half_price || null,
+      originalFullPrice: item.full_price || null,
+      discountPct: pct
+    }
+  }
+
   function handleAddItem(item) {
     if (!item.in_stock) return toast.error('This item is currently out of stock')
-    if (item.half_price && item.full_price) {
-      setHalfFullItem(item)
+    const discounted = getDiscountedItem(item)
+    if (discounted.half_price && discounted.full_price) {
+      setHalfFullItem(discounted)
     } else {
-      addItem({ id: item.id, name: item.name, price: item.price, brand: item.brand })
-      toast.success(`${item.name} added!`, { icon: '🍽️' })
+      addItem({ id: discounted.id, name: discounted.name, price: discounted.price, brand: discounted.brand, originalPrice: discounted.originalPrice })
+      toast.success(`${discounted.name} added!`, { icon: '🍽️' })
       openCart()
     }
   }
 
   function handleHalfFull(item, variant) {
     const price = variant === 'Half' ? item.half_price : item.full_price
-    addItem({ id: item.id, name: `${item.name} (${variant})`, price, brand: item.brand, variant })
+    const originalPrice = variant === 'Half' ? item.originalHalfPrice : item.originalFullPrice
+    addItem({ id: item.id, name: `${item.name} (${variant})`, price, brand: item.brand, variant, originalPrice })
     toast.success(`${item.name} (${variant}) added!`, { icon: '🍽️' })
     setHalfFullItem(null)
     openCart()
@@ -113,12 +133,27 @@ export default function Website() {
       <div className="cursor-dot" />
       <div className="cursor-ring" />
 
+      {/* ANIMATED BANNER from admin settings */}
+      {settings?.banner_active && settings?.banner_text && (
+        <div style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)', padding: '10px 0', overflow: 'hidden', position: 'relative', zIndex: 101 }}>
+          <div className="marquee-inner" style={{ gap: '4rem' }}>
+            {Array(8).fill(null).map((_, i) => (
+              <span key={i} style={{ color: '#0a0500', fontSize: '14px', fontWeight: 700, fontFamily: 'DM Sans', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                🎉 {settings.banner_text} &nbsp;&nbsp;&nbsp;
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* MARQUEE STRIP */}
       <div style={{ background: '#5C1A1A', padding: '8px 0', overflow: 'hidden', position: 'relative', zIndex: 100 }}>
         <div className="marquee-inner" style={{ gap: '3rem' }}>
           {Array(6).fill(null).map((_, i) => (
             <span key={i} style={{ color: '#f5e6c8', fontSize: '13px', fontFamily: 'DM Sans', letterSpacing: '0.05em' }}>
-              🍽️ Free Delivery on orders above ₹269 &nbsp;·&nbsp; 📞 9711386962 | 9217291488 &nbsp;·&nbsp; ⏰ 11 AM – 11 PM Daily &nbsp;&nbsp;&nbsp;
+              {settings?.announcement
+                ? `🍽️ ${settings.announcement} &nbsp;&nbsp;&nbsp;`
+                : `🍽️ Free Delivery on orders above ₹269 &nbsp;·&nbsp; 📞 9711386962 | 9217291488 &nbsp;·&nbsp; ⏰ 11 AM – 11 PM Daily &nbsp;&nbsp;&nbsp;`}
             </span>
           ))}
         </div>
@@ -136,7 +171,7 @@ export default function Website() {
           FeastWala
         </div>
         <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          {[['#thali', 'Maa Ki Thali'], ['#chinese', 'Chinese & More'], ['#contact', 'Contact']].map(([href, label]) => (
+          {[['#thali', 'Maa Ki Thali'], ['#chinese', 'Chinese & More'], ['#reviews', 'Reviews'], ['#contact', 'Contact']].map(([href, label]) => (
             <a key={href} href={href} style={{ color: '#c8b89a', fontSize: '14px', textDecoration: 'none', transition: 'color 0.2s', letterSpacing: '0.03em' }}
               onMouseEnter={e => e.target.style.color = '#c9a84c'} onMouseLeave={e => e.target.style.color = '#c8b89a'}>
               {label}
@@ -260,7 +295,7 @@ export default function Website() {
             </div>
           </div>
 
-          <MenuSection items={thaliMenu} theme="light" onAdd={handleAddItem} />
+          <MenuSection items={thaliMenu} theme="light" onAdd={handleAddItem} settings={settings} />
         </section>
       )}
 
@@ -272,9 +307,12 @@ export default function Website() {
             <h2 style={{ fontFamily: 'Cormorant Garamond', fontSize: 'clamp(2rem,4vw,3rem)', color: '#f5e6c8' }}>Indo-Chinese Excellence</h2>
             <p style={{ color: '#c8b89a', marginTop: '0.5rem', fontSize: '14px' }}>Authentic flavours · 15km delivery radius · Max 1 hr</p>
           </div>
-          <MenuSection items={chineseMenu} theme="dark" onAdd={handleAddItem} />
+          <MenuSection items={chineseMenu} theme="dark" onAdd={handleAddItem} settings={settings} />
         </section>
       )}
+
+      {/* REVIEWS SECTION */}
+      <ReviewsSection />
 
       {/* CONTACT SECTION */}
       <section id="contact" style={{ padding: '5rem 5%', background: 'var(--deep)' }} className="reveal">
@@ -287,6 +325,7 @@ export default function Website() {
               ['📍', 'Address', 'Malviya Nagar, New Delhi'],
               ['⏰', 'Hours', '11 AM – 11 PM Daily'],
               ['📱', 'Phone', '9711386962 | 9217291488'],
+              ['📧', 'Email', 'feastwala3@gmail.com'],
               ['📸', 'Instagram', '@feastwala.2026']
             ].map(([icon, label, val]) => (
               <div key={label} style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '12px', padding: '1.2rem' }}>
@@ -331,18 +370,27 @@ export default function Website() {
 }
 
 // ── Menu Section Component ──────────────────────────────
-function MenuSection({ items, theme, onAdd }) {
+function MenuSection({ items, theme, onAdd, settings }) {
   const dark = theme === 'dark'
   const categories = Object.keys(items)
   const [active, setActive] = useState(categories[0] || '')
-  const [gridKey, setGridKey] = useState(0) // forces re-mount of grid on category change
+  const [gridKey, setGridKey] = useState(0)
 
   useEffect(() => { if (categories.length && !active) setActive(categories[0]) }, [categories])
 
   function switchCategory(cat) {
     setActive(cat)
-    setGridKey(k => k + 1) // re-mount grid so cards animate in fresh
+    setGridKey(k => k + 1)
   }
+
+  // get active discount for this brand
+  const brand = theme === 'light' ? 'thali' : 'chinese'
+  const globalPct = settings?.global_discount_pct || 0
+  const brandPct = brand === 'thali' ? (settings?.thali_discount_pct || 0) : (settings?.chinese_discount_pct || 0)
+  const discountPct = Math.max(globalPct, brandPct)
+  const discountLabel = discountPct > 0
+    ? (brand === 'thali' ? settings?.thali_discount_label : settings?.chinese_discount_label) || settings?.global_discount_label || `${discountPct}% OFF`
+    : null
 
   if (!categories.length) return (
     <div style={{ textAlign: 'center', color: '#c8b89a', padding: '3rem' }}>
@@ -353,6 +401,15 @@ function MenuSection({ items, theme, onAdd }) {
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      {/* Discount badge */}
+      {discountLabel && (
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <span style={{ background: 'linear-gradient(90deg, #c0392b, #e74c3c)', color: 'white', padding: '6px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', boxShadow: '0 4px 16px rgba(192,57,43,0.4)', animation: 'goldPulse 2s ease-in-out infinite' }}>
+            🔥 {discountLabel} — {discountPct}% OFF
+          </span>
+        </div>
+      )}
+
       {/* Category pills */}
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2.5rem', justifyContent: 'center' }}>
         {categories.map((cat, i) => (
@@ -363,29 +420,34 @@ function MenuSection({ items, theme, onAdd }) {
             color: active === cat ? '#0a0500' : (dark ? '#c8b89a' : '#5a3010'),
             transition: 'all 0.22s ease', fontFamily: 'DM Sans',
             boxShadow: active === cat ? '0 0 16px rgba(201,168,76,0.35)' : 'none',
-            transform: active === cat ? 'scale(1.04)' : 'scale(1)',
-            animationDelay: `${i * 40}ms`
+            transform: active === cat ? 'scale(1.04)' : 'scale(1)'
           }}>
             {cat}
           </button>
         ))}
       </div>
 
-      {/* Items grid — key forces remount so cards animate in on every category switch */}
+      {/* Items grid */}
       <div key={gridKey} className="menu-grid">
         {(items[active] || []).map((item, i) => (
-          <ItemCard key={item.id} item={item} theme={theme} onAdd={onAdd} delay={i * 55} />
+          <ItemCard key={item.id} item={item} theme={theme} onAdd={onAdd} delay={i * 55} discountPct={discountPct} />
         ))}
       </div>
     </div>
   )
 }
 
-// ── Item Card — NO reveal class (avoids layout shift), uses menu-card animation ──
-function ItemCard({ item, theme, onAdd, delay }) {
+// ── Item Card — shows discount strikethrough when applicable ──
+function ItemCard({ item, theme, onAdd, delay, discountPct }) {
   const dark = theme === 'dark'
   const hasHalfFull = item.half_price && item.full_price
   const [hovered, setHovered] = useState(false)
+
+  // Calculate discounted prices for display
+  const discountedPrice = discountPct > 0 && item.price ? Math.round(item.price * (1 - discountPct / 100)) : null
+  const discountedHalf = discountPct > 0 && item.half_price ? Math.round(item.half_price * (1 - discountPct / 100)) : null
+  const discountedFull = discountPct > 0 && item.full_price ? Math.round(item.full_price * (1 - discountPct / 100)) : null
+  const showDiscount = discountPct > 0
 
   return (
     <div
@@ -403,6 +465,13 @@ function ItemCard({ item, theme, onAdd, delay }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Discount badge — below title, not overlapping */}
+      {showDiscount && item.in_stock && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: '6px', padding: '2px 8px', width: 'fit-content', marginTop: '-2px' }}>
+          <span style={{ color: '#e74c3c', fontSize: '11px', fontWeight: 700 }}>🔥 {discountPct}% OFF</span>
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <p style={{ fontFamily: 'Cormorant Garamond', fontWeight: 600, fontSize: '17px', color: dark ? '#f5e6c8' : '#2a1200', lineHeight: 1.3 }}>{item.name}</p>
@@ -414,32 +483,95 @@ function ItemCard({ item, theme, onAdd, delay }) {
           onClick={() => onAdd(item)}
           disabled={!item.in_stock}
           style={{
-            background: item.in_stock ? '#c9a84c' : '#444',
-            color: item.in_stock ? '#0a0500' : '#888',
-            border: 'none', borderRadius: '8px',
-            width: '34px', height: '34px', fontSize: '20px', lineHeight: 1,
-            flexShrink: 0, marginLeft: '10px',
-            transition: 'transform 0.2s, background 0.2s',
-            transform: hovered && item.in_stock ? 'rotate(90deg) scale(1.1)' : 'none',
-            fontWeight: 700,
+            background: item.in_stock ? '#c9a84c' : '#444', color: item.in_stock ? '#0a0500' : '#888',
+            border: 'none', borderRadius: '8px', width: '34px', height: '34px', fontSize: '20px', lineHeight: 1,
+            flexShrink: 0, marginLeft: '10px', transition: 'transform 0.2s, background 0.2s',
+            transform: hovered && item.in_stock ? 'rotate(90deg) scale(1.1)' : 'none', fontWeight: 700,
           }}
         >
           {item.in_stock ? '+' : '✕'}
         </button>
       </div>
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-        <span style={{ fontFamily: 'Cormorant Garamond', fontSize: '18px', fontWeight: 700, color: '#c9a84c' }}>
-          {hasHalfFull
-            ? <span style={{ fontSize: '13px', letterSpacing: '0.02em' }}>H: ₹{item.half_price} &nbsp;·&nbsp; F: ₹{item.full_price}</span>
-            : `₹${item.price}`}
-        </span>
+        <div>
+          {hasHalfFull ? (
+            <div>
+              {showDiscount ? (
+                <div>
+                  <span style={{ color: '#8a7a65', fontSize: '11px', textDecoration: 'line-through', marginRight: '4px' }}>H: ₹{item.half_price} · F: ₹{item.full_price}</span>
+                  <span style={{ fontFamily: 'Cormorant Garamond', fontSize: '15px', fontWeight: 700, color: '#c9a84c' }}>H: ₹{discountedHalf} · F: ₹{discountedFull}</span>
+                </div>
+              ) : (
+                <span style={{ fontFamily: 'Cormorant Garamond', fontSize: '15px', fontWeight: 700, color: '#c9a84c' }}>H: ₹{item.half_price} · F: ₹{item.full_price}</span>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {showDiscount && <span style={{ color: '#8a7a65', fontSize: '13px', textDecoration: 'line-through' }}>₹{item.price}</span>}
+              <span style={{ fontFamily: 'Cormorant Garamond', fontSize: '20px', fontWeight: 700, color: '#c9a84c' }}>₹{showDiscount ? discountedPrice : item.price}</span>
+            </div>
+          )}
+        </div>
         {!item.in_stock && (
-          <span style={{ background: '#c0392b', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>
-            OUT OF STOCK
-          </span>
+          <span style={{ background: '#c0392b', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>OUT OF STOCK</span>
         )}
       </div>
     </div>
+  )
+}
+
+// ── Reviews Section on Website ─────────────────────────
+function ReviewsSection() {
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.from('reviews').select('*').eq('visible', true).order('created_at', { ascending: false }).limit(12)
+      .then(({ data }) => { if (data) setReviews(data); setLoading(false) })
+
+    const sub = supabase.channel('public-reviews')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => {
+        supabase.from('reviews').select('*').eq('visible', true).order('created_at', { ascending: false }).limit(12)
+          .then(({ data }) => { if (data) setReviews(data) })
+      })
+      .subscribe()
+    return () => supabase.removeChannel(sub)
+  }, [])
+
+  if (loading || reviews.length === 0) return null
+
+  const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+
+  return (
+    <section id="reviews" style={{ padding: '5rem 5%', background: 'var(--black)' }} className="reveal">
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <p style={{ color: '#c9a84c', fontSize: '12px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>What Our Customers Say</p>
+          <h2 style={{ fontFamily: 'Cormorant Garamond', fontSize: 'clamp(2rem,4vw,3rem)', color: '#f5e6c8' }}>Customer Reviews</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '0.75rem' }}>
+            <span style={{ color: '#c9a84c', fontSize: '24px' }}>{'★'.repeat(Math.round(parseFloat(avg)))}{'☆'.repeat(5 - Math.round(parseFloat(avg)))}</span>
+            <span style={{ fontFamily: 'Cormorant Garamond', fontSize: '28px', color: '#c9a84c', fontWeight: 700 }}>{avg}</span>
+            <span style={{ color: '#c8b89a', fontSize: '14px' }}>({reviews.length} reviews)</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.2rem' }}>
+          {reviews.map((r, i) => (
+            <div key={r.id} className="menu-card" style={{ animationDelay: `${i * 80}ms`, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: '14px', padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                <div>
+                  <p style={{ color: '#f5e6c8', fontWeight: 600, fontSize: '15px' }}>{r.customer_name}</p>
+                  <p style={{ color: '#8a7a65', fontSize: '11px', marginTop: '2px' }}>{new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                </div>
+                <span style={{ color: '#c9a84c', fontSize: '16px', letterSpacing: '1px' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)}</span>
+              </div>
+              <p style={{ color: '#c8b89a', fontSize: '14px', lineHeight: 1.7, fontStyle: 'italic' }}>"{r.text}"</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
