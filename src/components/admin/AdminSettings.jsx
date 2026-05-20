@@ -11,11 +11,29 @@ export default function AdminSettings() {
       .then(({ data }) => { if (data) setSettings(data) })
   }, [])
 
-  // Clamp discount 0-98, strip leading zeros
-  function setDiscount(key, raw) {
-    const stripped = raw.replace(/^0+(\d)/, '$1') // remove leading zeros
-    const num = parseInt(stripped, 10)
+  // Raw string state for discount inputs so typing works naturally
+  const [discountRaw, setDiscountRaw] = useState({
+    global_discount_pct: String(settings.global_discount_pct || 0),
+    thali_discount_pct: String(settings.thali_discount_pct || 0),
+    chinese_discount_pct: String(settings.chinese_discount_pct || 0)
+  })
+
+  function handleDiscountChange(key, raw) {
+    // Allow free typing — just update the raw string
+    setDiscountRaw(r => ({ ...r, [key]: raw }))
+    // Update settings with parsed value (allow empty while typing)
+    const num = parseInt(raw, 10)
+    if (!isNaN(num)) {
+      const clamped = Math.min(Math.max(num, 0), 98)
+      setSettings(s => ({ ...s, [key]: clamped }))
+    }
+  }
+
+  function handleDiscountBlur(key, raw) {
+    // On blur — clamp and clean up
+    const num = parseInt(raw, 10)
     const safe = isNaN(num) ? 0 : Math.min(Math.max(num, 0), 98)
+    setDiscountRaw(r => ({ ...r, [key]: String(safe) }))
     setSettings(s => ({ ...s, [key]: safe }))
   }
 
@@ -96,8 +114,9 @@ export default function AdminSettings() {
             <div style={{ position: 'relative' }}>
               <input
                 type="number" min="0" max="98"
-                value={pct}
-                onChange={e => setDiscount(pctKey, e.target.value)}
+                value={discountRaw[pctKey] ?? pct}
+                onChange={e => handleDiscountChange(pctKey, e.target.value)}
+                onBlur={e => handleDiscountBlur(pctKey, e.target.value)}
                 style={{ ...iStyle, paddingRight: '28px', border: `1px solid ${isHigh ? '#c0392b' : 'rgba(201,168,76,0.2)'}`, color: isHigh ? '#c0392b' : '#f5e6c8' }}
               />
               <span style={{ position: 'absolute', right: '9px', top: '50%', transform: 'translateY(-50%)', color: '#8a7a65', fontSize: '12px', fontWeight: 600 }}>%</span>
