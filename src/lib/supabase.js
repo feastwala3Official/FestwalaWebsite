@@ -21,7 +21,7 @@ export const OUTLETS = [
     lng: 77.207624,
     address: 'Malviya Nagar, New Delhi',
     whatsapp: '919711386962',
-    maxDeliveryKm: 7
+    maxDeliveryKm: 10
   },
   {
     name: 'Maa Ki Thali',
@@ -30,18 +30,17 @@ export const OUTLETS = [
     lng: 77.169902,
     address: 'Kishangarh, New Delhi',
     whatsapp: '919217291488',
-    maxDeliveryKm: 7
+    maxDeliveryKm: 10
   }
 ]
 
 export const CONFIG = {
   whatsapp: '919711386962',
   whatsapp2: '919217291488',
-  outletLat: 28.5355,
-  outletLng: 77.2100,
-  maxDeliveryKm: 15,
-  razorpayKey: 'rzp_test_Sr90tBXtzzgTFE',
-  sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL'
+  email: 'feastwala3@gmail.com',
+  razorpayKey: 'rzp_test_Sr9OtBXtzzgTFE',
+  sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL',
+  googleMapsKey: 'AIzaSyDZs3QHtvnZVjXgOiQEfwOSZcEdRv5lmwE'
 }
 
 export function getDistance(lat1, lng1, lat2, lng2) {

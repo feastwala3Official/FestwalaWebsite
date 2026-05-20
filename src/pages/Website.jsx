@@ -247,9 +247,9 @@ export default function Website() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', maxWidth: '900px', margin: '0 auto' }}>
           {[
-            { label: 'Meal 1', price: 139, items: '4 Roti · Dal · Rice · Sabzi · Salad · Water Bottle' },
-            { label: 'Meal 2', price: 169, items: '6 Roti · Dal · Rice · Paneer Sabzi · Sweet · Salad+Raita · Water Bottle' },
-            { label: 'Monthly Plan', price: 120, unit: '/thali', items: '30 Days · Free Masala Chai Daily · All Delhi Delivery' }
+            { label: 'Meal 1', price: 299, items: '4 Roti · Dal · Rice · Sabzi · Salad · Water Bottle', cta: 'Order Now' },
+            { label: 'Meal 2', price: 311, items: '6 Roti · Dal · Rice · Paneer Sabzi · Sweet · Salad+Raita · Water Bottle', cta: 'Order Now' },
+            { label: 'Monthly Plan', price: 120, unit: '/thali', items: '30 Days · Daily home-cooked thali · Free Masala Chai · Within 10km delivery', cta: 'Call for Details' }
           ].map((meal, i) => (
             <div key={i} style={{
               background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '16px',
@@ -261,9 +261,15 @@ export default function Website() {
               <p style={{ color: '#c9a84c', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{meal.label}</p>
               <p style={{ fontFamily: 'Cormorant Garamond', fontSize: '3rem', fontWeight: 700, color: '#f5e6c8' }}>₹{meal.price}<span style={{ fontSize: '1rem', color: '#c8b89a' }}>{meal.unit || ''}</span></p>
               <p style={{ color: '#c8b89a', fontSize: '13px', lineHeight: 1.8, margin: '1rem 0' }}>{meal.items}</p>
-              <button onClick={() => { window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(`Hi, I want to order ${meal.label} (₹${meal.price})`)}`, '_blank') }}
-                style={{ background: '#c9a84c', color: '#0a0500', border: 'none', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, fontSize: '14px', width: '100%' }}>
-                Order on WhatsApp
+              <button onClick={() => {
+                if (meal.cta === 'Call for Details') {
+                  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent('Hi! I want to know more about the Monthly Thali Plan.')}`, '_blank')
+                } else {
+                  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(`Hi, I want to order ${meal.label} (₹${meal.price})`)}`, '_blank')
+                }
+              }}
+                style={{ background: meal.cta === 'Call for Details' ? 'transparent' : '#c9a84c', color: meal.cta === 'Call for Details' ? '#c9a84c' : '#0a0500', border: meal.cta === 'Call for Details' ? '1px solid #c9a84c' : 'none', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, fontSize: '14px', width: '100%' }}>
+                {meal.cta === 'Call for Details' ? '📞 Call for Details & Timing' : '🛵 Order on WhatsApp'}
               </button>
             </div>
           ))}
@@ -283,7 +289,7 @@ export default function Website() {
               <div>
                 <p style={{ color: '#e8c97a', fontSize: '12px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Maa Ki Thali & Combos</p>
                 <h2 style={{ fontFamily: 'Cormorant Garamond', fontSize: 'clamp(2rem,4vw,3.5rem)', color: '#fff8f0', fontWeight: 700 }}>Ghar Jaisa Khana</h2>
-                <p style={{ color: '#f5e6c8', marginTop: '0.5rem', fontSize: '14px' }}>All Delhi delivery · 1.5 hr advance · 40% off regular prices</p>
+                <p style={{ color: '#f5e6c8', marginTop: '0.5rem', fontSize: '14px' }}>Delivery within 10km · Fresh daily · Value pricing</p>
               </div>
               {[[-1,'◀'],[1,'▶']].map(([dir, sym]) => (
                 <button key={dir} onClick={() => setThaliVideo(v => (v + dir + 2) % 2)} style={{
@@ -305,7 +311,7 @@ export default function Website() {
           <div style={{ textAlign: 'center', marginBottom: '3rem' }} className="reveal">
             <p style={{ color: '#c9a84c', fontSize: '12px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Chinese & More By Feastwala</p>
             <h2 style={{ fontFamily: 'Cormorant Garamond', fontSize: 'clamp(2rem,4vw,3rem)', color: '#f5e6c8' }}>Indo-Chinese Excellence</h2>
-            <p style={{ color: '#c8b89a', marginTop: '0.5rem', fontSize: '14px' }}>Authentic flavours · 15km delivery radius · Max 1 hr</p>
+            <p style={{ color: '#c8b89a', marginTop: '0.5rem', fontSize: '14px' }}>Authentic flavours · Delivery within 10km · Fast preparation</p>
           </div>
           <MenuSection items={chineseMenu} theme="dark" onAdd={handleAddItem} settings={settings} />
         </section>

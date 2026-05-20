@@ -28,30 +28,32 @@ body {
   cursor: none;
 }
 
-/* ── Custom cursor — visible everywhere including modals, admin, light sections ── */
+/* ── Custom cursor — visible on ALL backgrounds including Razorpay, light modals, white pages ── */
 .cursor-dot {
-  width: 8px; height: 8px;
-  background: var(--gold);
+  width: 10px; height: 10px;
+  background: #111;                  /* dark fill */
+  border: 2px solid #fff;            /* white outline — visible on dark */
   border-radius: 50%;
   position: fixed;
-  top: -20px; left: -20px;        /* start offscreen, not 0,0 */
+  top: -20px; left: -20px;
   pointer-events: none;
-  z-index: 2147483647;             /* max z-index — above everything */
+  z-index: 2147483647;
   transform: translate(-50%, -50%);
-  transition: width 0.15s, height 0.15s, background 0.15s;
-  mix-blend-mode: normal;
+  transition: width 0.15s, height 0.15s;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.3); /* extra ring for mid-tone backgrounds */
 }
 .cursor-ring {
-  width: 30px; height: 30px;
-  border: 1.5px solid var(--gold);
+  width: 32px; height: 32px;
+  border: 1.5px solid #111;          /* dark ring */
   border-radius: 50%;
   position: fixed;
   top: -20px; left: -20px;
   pointer-events: none;
   z-index: 2147483646;
   transform: translate(-50%, -50%);
-  transition: left 0.1s ease, top 0.1s ease, width 0.2s, height 0.2s, border-color 0.2s;
-  opacity: 0.75;
+  transition: left 0.1s ease, top 0.1s ease, width 0.2s, height 0.2s;
+  opacity: 0.6;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.4); /* white shadow for dark backgrounds */
 }
 
 /* Cursor grows on hover over clickable elements */
