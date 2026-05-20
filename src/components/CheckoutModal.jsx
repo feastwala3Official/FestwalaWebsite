@@ -47,17 +47,13 @@ export default function CheckoutModal({ onClose }) {
       .catch(() => {})
   }, [hasGoogleKey])
 
-  // Attach autocomplete using callback ref
-  // Just store the ref - actual attachment happens in useEffect below
+  // Callback ref — just stores the input ref, actual autocomplete setup in useEffect
   const attachAutocomplete = useCallback((inputEl) => {
-    if (!inputEl) return
-    addressRef.current = inputEl
-    // Don't attach here - maps may not be loaded yet
-    // The useEffect below handles attachment once maps is ready
+    addressRef.current = inputEl || null
   }, [])
 
-  // Actually attach autocomplete when both input AND maps are ready
-  const doAttach = useCallback((inputEl) => {
+  // This does the actual autocomplete setup — called from useEffect when both ready
+  function setupAutocomplete(inputEl) {
     if (!inputEl || !window.google?.maps?.places || autocompleteRef.current) return
 
     const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
@@ -122,15 +118,15 @@ export default function CheckoutModal({ onClose }) {
     })
 
     autocompleteRef.current = autocomplete
-  }, [])
+  }
 
-  // Attach when maps loads (input already in DOM)
-  // AND re-attach when input mounts (maps already loaded)
+  // Run setup when maps loads (covers: input already mounted, waiting for maps)
+  // AND when component mounts if maps already loaded (covers: maps ready, input just mounted)
   useEffect(() => {
     if (mapsLoaded && addressRef.current && !autocompleteRef.current) {
-      doAttach(addressRef.current)
+      setupAutocomplete(addressRef.current)
     }
-  }, [mapsLoaded, doAttach])
+  }, [mapsLoaded])
 
   function makeOrderId() { return 'FW' + Date.now().toString().slice(-8) }
 

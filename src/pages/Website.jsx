@@ -139,7 +139,7 @@ export default function Website() {
           <div className="marquee-inner" style={{ gap: '4rem' }}>
             {Array(8).fill(null).map((_, i) => (
               <span key={i} style={{ color: '#0a0500', fontSize: '14px', fontWeight: 700, fontFamily: 'DM Sans', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                🎉 {settings.banner_text} &nbsp;&nbsp;&nbsp;
+                🎉 {settings.banner_text}   
               </span>
             ))}
           </div>
@@ -152,8 +152,8 @@ export default function Website() {
           {Array(6).fill(null).map((_, i) => (
             <span key={i} style={{ color: '#f5e6c8', fontSize: '13px', fontFamily: 'DM Sans', letterSpacing: '0.05em' }}>
               {settings?.announcement
-                ? `🍽️ ${settings.announcement} &nbsp;&nbsp;&nbsp;`
-                : `🍽️ Free Delivery on orders above ₹269 &nbsp;·&nbsp; 📞 9711386962 | 9217291488 &nbsp;·&nbsp; ⏰ 11 AM – 11 PM Daily &nbsp;&nbsp;&nbsp;`}
+                ? `🍽️ ${settings.announcement}`
+                : `🍽️ Free Delivery above ₹269  ·  📞 9711386962 | 9217291488  ·  ⏰ 11 AM – 11 PM`}
             </span>
           ))}
         </div>

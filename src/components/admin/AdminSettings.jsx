@@ -8,14 +8,23 @@ export default function AdminSettings() {
 
   useEffect(() => {
     supabase.from('settings').select('*').single()
-      .then(({ data }) => { if (data) setSettings(data) })
+      .then(({ data }) => {
+        if (data) {
+          setSettings(data)
+          setDiscountRaw({
+            global_discount_pct: String(data.global_discount_pct || 0),
+            thali_discount_pct: String(data.thali_discount_pct || 0),
+            chinese_discount_pct: String(data.chinese_discount_pct || 0)
+          })
+        }
+      })
   }, [])
 
-  // Raw string state for discount inputs so typing works naturally
+  // Initialize with '0' — synced to real values once settings load from Supabase
   const [discountRaw, setDiscountRaw] = useState({
-    global_discount_pct: String(settings.global_discount_pct || 0),
-    thali_discount_pct: String(settings.thali_discount_pct || 0),
-    chinese_discount_pct: String(settings.chinese_discount_pct || 0)
+    global_discount_pct: '0',
+    thali_discount_pct: '0',
+    chinese_discount_pct: '0'
   })
 
   function handleDiscountChange(key, raw) {
