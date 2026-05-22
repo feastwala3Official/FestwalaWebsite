@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useCart } from '../context/CartContext'
 import { supabase, CONFIG, OUTLETS, getDistance } from '../lib/supabase'
+import { emailOrderToRestaurant, emailOrderToCustomer } from '../lib/emails'
 import toast from 'react-hot-toast'
 
 // ── Load Google Maps with new async pattern + places library ──
@@ -151,8 +152,9 @@ export default function CheckoutModal({ onClose }) {
         if (secs) driveMin = Math.ceil(secs / 60)
       } catch (e) { console.log('Distance matrix failed, using estimate') }
 
-      const totalTime = 20 + driveMin
-      const timeText = `~${totalTime} mins (20 min prep + ${driveMin} min delivery)`
+      const driveWithBuffer = driveMin + CONFIG.bufferMins
+      const totalTime = CONFIG.prepTimeMins + driveWithBuffer
+      const timeText = `~${totalTime} mins (${CONFIG.prepTimeMins} min prep + ${driveWithBuffer} min delivery)`
       setLocData({ lat, lng, distance, outlet: nearest, canDeliver, timeText })
 
       // Reset session token for next search
@@ -172,12 +174,19 @@ export default function CheckoutModal({ onClose }) {
 
   function makeOrderId() { return 'FW' + Date.now().toString().slice(-8) }
 
+  function makeToken() {
+    return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('')
+  }
+
   async function placeOrder(paymentId = '') {
     const orderId = makeOrderId()
+    const trackToken = makeToken()
     const nearestOutlet = locData?.outlet || OUTLETS[0]
     const fullAddress = form.pincode ? `${form.address}, ${form.pincode}` : form.address
 
     const orderData = {
+      track_token: trackToken,
+      email: form.email.trim() || null,
       order_id: orderId,
       customer_name: form.name.trim(),
       phone: form.phone.trim(),
@@ -198,6 +207,11 @@ export default function CheckoutModal({ onClose }) {
 
     await supabase.from('orders').insert(orderData)
 
+    // Send emails (non-blocking)
+    const trackUrl = `${CONFIG.siteUrl}/order/${orderId}?token=${trackToken}`
+    emailOrderToRestaurant(orderData).catch(() => {})
+    if (form.email.trim()) emailOrderToCustomer(orderData, form.email.trim(), trackUrl).catch(() => {})
+
     if (CONFIG.sheetWebhook !== 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL') {
       fetch(CONFIG.sheetWebhook, {
         method: 'POST', mode: 'no-cors',
@@ -217,7 +231,7 @@ export default function CheckoutModal({ onClose }) {
     setPlacedOrder({
       orderId, name: form.name, total: grandTotal,
       payment: form.payment, timeText: locData?.timeText || '30-45 mins',
-      orderType: form.orderType, address: fullAddress
+      orderType: form.orderType, address: fullAddress, trackToken
     })
     clearCart()
     setStep('success')
@@ -290,7 +304,8 @@ export default function CheckoutModal({ onClose }) {
             </div>
           ))}
         </div>
-        <button onClick={() => { closeCart(); onClose() }} style={{ width: '100%', background: '#c9a84c', border: 'none', borderRadius: '10px', padding: '13px', color: '#0a0500', fontWeight: 700, fontSize: '15px', fontFamily: 'DM Sans' }}>Back to Menu 🍽️</button>
+        <a href={`/order/${placedOrder.orderId}?token=${placedOrder.trackToken}`} style={{ display: 'block', width: '100%', background: '#c9a84c', border: 'none', borderRadius: '10px', padding: '13px', color: '#0a0500', fontWeight: 700, fontSize: '15px', fontFamily: 'DM Sans', textDecoration: 'none', textAlign: 'center', marginBottom: '0.75rem', boxSizing: 'border-box' }}>Track Your Order →</a>
+        <button onClick={() => { closeCart(); onClose() }} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '13px', color: '#c8b89a', fontWeight: 600, fontSize: '14px', fontFamily: 'DM Sans' }}>Back to Menu 🍽️</button>
       </div>
     </>
   )

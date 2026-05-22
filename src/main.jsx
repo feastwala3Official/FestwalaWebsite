@@ -6,6 +6,8 @@ import { CartProvider } from './context/CartContext'
 import Website from './pages/Website'
 import Admin from './pages/Admin'
 import ReviewPage from './pages/ReviewPage'
+import OrderStatusPage from './pages/OrderStatusPage'
+import TrackPage from './pages/TrackPage'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -18,8 +20,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path="/" element={<Website />} />
           <Route path="/admin" element={<Admin />} />
-          {/* <Route path="/admin.html" element={<Admin />} /> */}
           <Route path="/review" element={<ReviewPage />} />
+          <Route path="/order/:orderId" element={<OrderStatusPage />} />
+          <Route path="/track" element={<TrackPage />} />
         </Routes>
       </CartProvider>
     </BrowserRouter>

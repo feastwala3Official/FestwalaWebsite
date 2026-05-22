@@ -139,7 +139,7 @@ export default function Website() {
           <div className="marquee-inner" style={{ gap: '4rem' }}>
             {Array(8).fill(null).map((_, i) => (
               <span key={i} style={{ color: '#0a0500', fontSize: '14px', fontWeight: 700, fontFamily: 'DM Sans', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                🎉 {settings.banner_text}   
+                🎉 {settings.banner_text} &nbsp;&nbsp;&nbsp;
               </span>
             ))}
           </div>
@@ -152,8 +152,8 @@ export default function Website() {
           {Array(6).fill(null).map((_, i) => (
             <span key={i} style={{ color: '#f5e6c8', fontSize: '13px', fontFamily: 'DM Sans', letterSpacing: '0.05em' }}>
               {settings?.announcement
-                ? `🍽️ ${settings.announcement}`
-                : `🍽️ Free Delivery above ₹269  ·  📞 9711386962 | 9217291488  ·  ⏰ 11 AM – 11 PM`}
+                ? `🍽️ ${settings.announcement} &nbsp;&nbsp;&nbsp;`
+                : `🍽️ Free Delivery on orders above ₹269 &nbsp;·&nbsp; 📞 9711386962 | 9217291488 &nbsp;·&nbsp; ⏰ 11 AM – 11 PM Daily &nbsp;&nbsp;&nbsp;`}
             </span>
           ))}
         </div>
@@ -171,7 +171,7 @@ export default function Website() {
           FeastWala
         </div>
         <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          {[['#thali', 'Maa Ki Thali'], ['#chinese', 'Chinese & More'], ['#reviews', 'Reviews'], ['#contact', 'Contact']].map(([href, label]) => (
+          {[['#thali', 'Maa Ki Thali'], ['#chinese', 'Chinese & More'], ['#reviews', 'Reviews'], ['/track', 'Track Order'], ['#contact', 'Contact']].map(([href, label]) => (
             <a key={href} href={href} style={{ color: '#c8b89a', fontSize: '14px', textDecoration: 'none', transition: 'color 0.2s', letterSpacing: '0.03em' }}
               onMouseEnter={e => e.target.style.color = '#c9a84c'} onMouseLeave={e => e.target.style.color = '#c8b89a'}>
               {label}
@@ -317,6 +317,26 @@ export default function Website() {
         </section>
       )}
 
+      {/* FRESH NEVER FROZEN SECTION */}
+      <section style={{ padding: '4rem 5%', background: 'var(--black)', textAlign: 'center' }} className="reveal">
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <p style={{ color: '#c9a84c', fontSize: '12px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Our Promise</p>
+          <h2 style={{ fontFamily: 'Cormorant Garamond', fontSize: 'clamp(2rem,4vw,2.8rem)', color: '#f5e6c8', marginBottom: '1rem' }}>Fresh. Never Frozen.</h2>
+          <p style={{ color: '#c8b89a', fontSize: '15px', lineHeight: 1.8, maxWidth: '600px', margin: '0 auto' }}>
+            Every meal is cooked fresh to order once you place it. We never use frozen or pre-made food.
+            That's why our preparation takes a little longer, but you get hot, home-style food made just for you, every single time.
+          </p>
+          <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '2.5rem' }}>
+            {[['🍳', 'Cooked to Order'], ['🌿', 'Fresh Ingredients'], ['🚫', 'No Frozen Food'], ['❤️', 'Made with Care']].map(([icon, text]) => (
+              <div key={text} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{icon}</div>
+                <p style={{ color: '#c8b89a', fontSize: '13px' }}>{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* REVIEWS SECTION */}
       <ReviewsSection />
 
@@ -351,7 +371,7 @@ export default function Website() {
         <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href="https://wa.me/919711386962" target="_blank" style={{ color: '#c9a84c', textDecoration: 'none', fontSize: '13px' }}>WhatsApp</a>
           <a href="https://instagram.com/feastwala.2026" target="_blank" style={{ color: '#c9a84c', textDecoration: 'none', fontSize: '13px' }}>Instagram</a>
-          <a href="/admin" style={{ color: '#c9a84c', textDecoration: 'none', fontSize: '13px' }}>Admin</a>
+          <a href="/track" style={{ color: '#c9a84c', textDecoration: 'none', fontSize: '13px' }}>Track Order</a>
         </div>
         <p style={{ color: '#5a4a35', fontSize: '12px', marginTop: '1.5rem' }}>© 2026 FeastWala. All rights reserved.</p>
       </footer>

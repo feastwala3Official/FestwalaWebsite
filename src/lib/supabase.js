@@ -4,7 +4,8 @@ const SUPABASE_URL = 'https://lqaasxstgsrrvdwlimdy.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxYWFzeHN0Z3NycnZkd2xpbWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwOTMzNjIsImV4cCI6MjA5NDY2OTM2Mn0.XPOU0bE8u7gjL_svbaScCqd1pA4Vxh-K0wmT3yepqMA'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  realtime: { params: { eventsPerSecond: 10 } }
+  realtime: { params: { eventsPerSecond: 10 } },
+  auth: { persistSession: true, autoRefreshToken: true }
 })
 
 export const CLOUDINARY = {
@@ -13,34 +14,29 @@ export const CLOUDINARY = {
   video2: 'https://res.cloudinary.com/dnd4tnx2a/video/upload/v1779093582/WhatsApp_Video_2026-05-13_at_13.50.24_1_bjlpuk.mp4'
 }
 
+// SINGLE OUTLET — FeastWala Malviya Nagar only
 export const OUTLETS = [
   {
     name: 'FeastWala',
-    area: 'Malviya Nagar',
+    area: 'our outlet',
     lat: 28.530679,
     lng: 77.207624,
-    address: 'Malviya Nagar, New Delhi',
+    address: 'New Delhi',
     whatsapp: '919711386962',
-    maxDeliveryKm: 10
-  },
-  {
-    name: 'Maa Ki Thali',
-    area: 'Kishangarh',
-    lat: 28.522287,
-    lng: 77.169902,
-    address: 'Kishangarh, New Delhi',
-    whatsapp: '919217291488',
     maxDeliveryKm: 10
   }
 ]
 
 export const CONFIG = {
   whatsapp: '919711386962',
-  whatsapp2: '919217291488',
   email: 'feastwala3@gmail.com',
   razorpayKey: 'rzp_test_Sr9OtBXtzzgTFE',
   sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL',
-  googleMapsKey: 'AIzaSyDZs3QHtvnZVjXgOiQEfwOSZcEdRv5lmwE'
+  googleMapsKey: 'AIzaSyDZs3QHtvnZVjXgOiQEfwOSZcEdRv5lmwE',
+  resendKey: 're_aoWmRZbq_K1w8pFJzRKxRaxwL99hBJvHe',
+  siteUrl: 'https://feastwala-website.vercel.app',
+  prepTimeMins: 30,
+  bufferMins: 5
 }
 
 export function getDistance(lat1, lng1, lat2, lng2) {
@@ -51,19 +47,23 @@ export function getDistance(lat1, lng1, lat2, lng2) {
 }
 
 export function checkDeliveryZone(lat, lng) {
-  let nearest = null, minDist = Infinity
-  for (const outlet of OUTLETS) {
-    const dist = getDistance(lat, lng, outlet.lat, outlet.lng)
-    if (dist < minDist) { minDist = dist; nearest = outlet }
-  }
+  const outlet = OUTLETS[0]
+  const dist = getDistance(lat, lng, outlet.lat, outlet.lng)
   return {
-    outlet: nearest,
-    distance: Math.round(minDist * 10) / 10,
-    canDeliver: minDist <= nearest.maxDeliveryKm
+    outlet,
+    distance: Math.round(dist * 10) / 10,
+    canDeliver: dist <= outlet.maxDeliveryKm
   }
 }
 
 export function applyDiscount(price, pct) {
   if (!pct || pct <= 0) return price
   return Math.round(price * (1 - pct / 100))
+}
+
+// Generate username: first 6 letters of name + @feastwala
+export function makeUsername(name) {
+  const clean = name.toLowerCase().replace(/[^a-z]/g, '')
+  const prefix = clean.slice(0, 6) || 'staff'
+  return `${prefix}@feastwala`
 }
