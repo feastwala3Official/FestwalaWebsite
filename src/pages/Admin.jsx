@@ -142,7 +142,7 @@ export default function Admin() {
         toast.success(`🔔 New order from ${payload.new.customer_name}!`, { duration: 8000 })
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
-        setOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new : o))
+        setOrders(prev => prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o))
       })
       .subscribe()
     return () => supabase.removeChannel(sub)
