@@ -22,8 +22,20 @@ export default function AdminOrders({ orders, setOrders, onStatusChange }) {
       : status === 'accepted'
       ? { accepted_at: now }
       : {}
-    const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString(), ...extra }).eq('id', id)
-    if (!error) { setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o)); toast.success('Status updated') }
+    console.log('Updating order', id, 'to', status, 'with', extra)
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status, updated_at: now, ...extra })
+      .eq('id', id)
+      .select()
+    if (error) {
+      console.error('Status update failed:', error)
+      toast.error('Update failed: ' + error.message)
+      return
+    }
+    console.log('Update result:', data)
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o))
+    toast.success('Status updated')
   }
 
   function exportCSV() {
