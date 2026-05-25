@@ -155,7 +155,7 @@ export default function CheckoutModal({ onClose }) {
       const driveWithBuffer = driveMin + CONFIG.bufferMins
       const totalTime = CONFIG.prepTimeMins + driveWithBuffer
       const timeText = `~${totalTime} mins (${CONFIG.prepTimeMins} min prep + ${driveWithBuffer} min delivery)`
-      setLocData({ lat, lng, distance, outlet: nearest, canDeliver, timeText })
+      setLocData({ lat, lng, distance, outlet: nearest, canDeliver, timeText, driveWithBuffer })
 
       // Reset session token for next search
       const { AutocompleteSessionToken } = await window.google.maps.importLibrary('places')
@@ -200,7 +200,7 @@ export default function CheckoutModal({ onClose }) {
       status: 'pending',
       estimated_time: locData?.timeText || '30-45 mins',
       prep_mins: CONFIG.prepTimeMins,
-      delivery_mins: locData ? Math.round(locData.distance * 3) + CONFIG.bufferMins : 20,
+      delivery_mins: locData?.driveWithBuffer || 20,
       customer_lat: locData?.lat || null,
       customer_lng: locData?.lng || null,
       distance_from_outlet: locData?.distance || null,

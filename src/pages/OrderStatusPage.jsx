@@ -83,8 +83,14 @@ export default function OrderStatusPage() {
 
       if (order.status === 'dispatched' && order.dispatched_at) {
         // After dispatch: count down delivery_mins from dispatch time
-        // delivery_mins is drive_time + 5 buffer, stored at order creation
-        const delivMins = order.delivery_mins || 20
+        // delivery_mins stored at order creation (drive time + 5 buffer)
+        // Fall back to parsing from estimated_time string if column missing (old orders)
+        let delivMins = order.delivery_mins || null
+        if (!delivMins) {
+          // estimated_time format: "~42 mins (30 min prep + 12 min delivery)"
+          const dlMatch = String(order.estimated_time || '').match(/\+(\s*\d+)\s*min\s*delivery/)
+          delivMins = dlMatch ? parseInt(dlMatch[1].trim(), 10) : 20
+        }
         const dispatchedAt = new Date(order.dispatched_at).getTime()
         const deadline = dispatchedAt + delivMins * 60 * 1000
         const diff = deadline - now
