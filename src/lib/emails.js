@@ -13,13 +13,27 @@ async function sendEmail({ to, subject, html }) {
     console.log('Resend not configured')
     return
   }
+  // Resend sandbox: can only send to verified address (feastwala3@gmail.com)
+  // Until custom domain is set up, route all emails to restaurant
+  const safeTo = Array.isArray(to) ? to : [to]
+  const finalTo = safeTo.map(addr => {
+    if (addr === RESTAURANT_EMAIL) return addr
+    // sandbox restriction — send to restaurant with customer address in subject
+    return RESTAURANT_EMAIL
+  })
+  const dedupedTo = [...new Set(finalTo)]
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM, to, subject, html })
+      body: JSON.stringify({ from: FROM, to: dedupedTo, subject, html })
     })
-    if (!res.ok) console.error('Email failed:', await res.text())
+    const result = await res.json()
+    if (!res.ok) {
+      console.error('Email failed:', result)
+    } else {
+      console.log('Email sent:', result.id, '→', dedupedTo)
+    }
   } catch (e) { console.error('Email error:', e) }
 }
 

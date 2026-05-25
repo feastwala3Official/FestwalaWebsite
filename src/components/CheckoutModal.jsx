@@ -224,13 +224,15 @@ export default function CheckoutModal({ onClose }) {
       }).catch(() => {})
     }
 
+    // WhatsApp notification to restaurant (background only, no popup for customer)
     const itemList = items.map(i => `• ${i.name} x${i.qty} = ₹${i.price * i.qty}`).join('\n')
     const mapsLink = locData ? `\n📍 https://maps.google.com/?q=${locData.lat},${locData.lng} (${locData.distance}km)` : ''
     const msgToUs = `🍽️ *New Order — FeastWala*\n\n*ID:* ${orderId}\n*Name:* ${form.name}\n*Phone:* ${form.phone}\n*Address:* ${fullAddress}${mapsLink}\n*Type:* ${form.orderType}\n*Payment:* ${form.payment}${paymentId ? ' ✅ Paid' : ''}\n\n*Items:*\n${itemList}\n\n*Total:* ₹${grandTotal}\n*Est. Time:* ${locData?.timeText || '30-45 mins'}`
-
-    const waWindow = window.open(`https://wa.me/${nearestOutlet.whatsapp}?text=${encodeURIComponent(msgToUs)}`, '_blank')
-    if (waWindow) waWindow.blur()
-    window.focus()
+    try {
+      const waWindow = window.open(`https://wa.me/${nearestOutlet.whatsapp}?text=${encodeURIComponent(msgToUs)}`, '_blank')
+      if (waWindow) { waWindow.blur(); setTimeout(() => { try { waWindow.close() } catch(e){} }, 2000) }
+      window.focus()
+    } catch(e) { console.log('WA background ping failed:', e) }
 
     setPlacedOrder({
       orderId, name: form.name, total: grandTotal,

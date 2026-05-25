@@ -59,24 +59,32 @@ export default function OrderStatusPage() {
   // Countdown timer
   useEffect(() => {
     if (!order || order.status === 'delivered' || order.status === 'cancelled') return
-    // Parse total minutes from estimated_time like "~45 mins (30 min prep + 15 min delivery)"
-    let totalMins = 45
-    const m = String(order.estimated_time || '').match(/~?(\d+)\s*mins/)
-    if (m) totalMins = parseInt(m[1], 10)
-    if (order.accepted_eta_mins) totalMins = order.accepted_eta_mins
 
-    const created = new Date(order.created_at).getTime()
-    const target = created + totalMins * 60 * 1000
+    let target
+
+    if (order.status === 'dispatched' && order.dispatched_at) {
+      // Once dispatched: show only drive time + 5 min buffer from dispatch moment
+      // drive time stored in distance_from_outlet (km), ~3 min/km + 5 min buffer
+      const driveKm = order.distance_from_outlet || 3
+      const driveMins = Math.round(driveKm * 3) + 5
+      target = new Date(order.dispatched_at).getTime() + driveMins * 60 * 1000
+    } else {
+      // Pending/accepted: use full estimated time from order creation
+      let totalMins = 45
+      const m = String(order.estimated_time || '').match(/~?(\d+)\s*mins/)
+      if (m) totalMins = parseInt(m[1], 10)
+      if (order.accepted_eta_mins) totalMins = order.accepted_eta_mins
+      target = new Date(order.created_at).getTime() + totalMins * 60 * 1000
+    }
 
     const tick = () => {
-      const now = Date.now()
-      const diff = Math.max(0, target - now)
+      const diff = Math.max(0, target - Date.now())
       setRemaining(Math.ceil(diff / 60000))
     }
     tick()
-    const interval = setInterval(tick, 30000)
+    const interval = setInterval(tick, 60000) // tick every minute
     return () => clearInterval(interval)
-  }, [order])
+  }, [order?.status, order?.dispatched_at])
 
   // Cancel window: only allow within 3 minutes of order creation
   useEffect(() => {
@@ -147,12 +155,16 @@ export default function OrderStatusPage() {
           <>
             {/* Countdown */}
             {!isDelivered && remaining !== null && (
-              <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
-                <p style={{ color: '#c8b89a', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Estimated arrival in</p>
-                <p style={{ fontFamily: 'Cormorant Garamond', fontSize: '48px', fontWeight: 700, color: '#c9a84c', lineHeight: 1.1, margin: '0.3rem 0' }}>
-                  {remaining > 0 ? `${remaining} min` : 'Any moment'}
+              <div style={{ background: order.status === 'dispatched' ? 'rgba(155,89,182,0.1)' : 'rgba(201,168,76,0.08)', border: `1px solid ${order.status === 'dispatched' ? 'rgba(155,89,182,0.4)' : 'rgba(201,168,76,0.25)'}`, borderRadius: '16px', padding: '1.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
+                <p style={{ color: '#c8b89a', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  {order.status === 'dispatched' ? '🛵 Arriving in' : 'Estimated arrival in'}
                 </p>
-                <p style={{ color: '#8a7a65', fontSize: '12px' }}>We prepare everything fresh — never frozen</p>
+                <p style={{ fontFamily: 'Cormorant Garamond', fontSize: '48px', fontWeight: 700, color: order.status === 'dispatched' ? '#9b59b6' : '#c9a84c', lineHeight: 1.1, margin: '0.3rem 0' }}>
+                  {remaining <= 1 ? 'Any moment now' : `${remaining} min`}
+                </p>
+                <p style={{ color: '#8a7a65', fontSize: '12px' }}>
+                  {order.status === 'dispatched' ? 'Your order is on the way!' : 'We prepare everything fresh — never frozen'}
+                </p>
               </div>
             )}
 
