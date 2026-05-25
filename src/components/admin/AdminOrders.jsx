@@ -23,6 +23,8 @@ export default function AdminOrders({ orders, setOrders, onStatusChange }) {
       ? { accepted_at: now }
       : {}
     console.log('Updating order', id, 'to', status, 'with', extra)
+    // Optimistic update first so UI reflects change immediately
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o))
     const { data, error } = await supabase
       .from('orders')
       .update({ status, updated_at: now, ...extra })
@@ -31,10 +33,11 @@ export default function AdminOrders({ orders, setOrders, onStatusChange }) {
     if (error) {
       console.error('Status update failed:', error)
       toast.error('Update failed: ' + error.message)
+      // Revert optimistic update on failure
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: o.status } : o))
       return
     }
     console.log('Update result:', data)
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o))
     toast.success('Status updated')
   }
 
