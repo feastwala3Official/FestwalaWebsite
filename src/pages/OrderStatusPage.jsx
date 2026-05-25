@@ -58,7 +58,11 @@ export default function OrderStatusPage() {
     const sub = supabase.channel(`order-${orderId}`)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `order_id=eq.${orderId}` },
-        payload => setOrder(payload.new))
+        async () => {
+          // Re-fetch full row on any update — payload.new may be missing columns
+          const { data } = await supabase.from('orders').select('*').eq('order_id', orderId).maybeSingle()
+          if (data) setOrder(data)
+        })
       .subscribe()
     return () => supabase.removeChannel(sub)
   }, [orderId, token])
@@ -161,14 +165,25 @@ export default function OrderStatusPage() {
   let timerBorder = 'rgba(201,168,76,0.25)'
   let timerSub = 'We prepare everything fresh — never frozen'
 
+  // How long actual prep took (accepted_at → dispatched_at)
+  let prepTookMins = null
+  if (isDispatched && order.accepted_at && order.dispatched_at) {
+    const diff = new Date(order.dispatched_at) - new Date(order.accepted_at)
+    prepTookMins = Math.round(diff / 60000)
+  }
+
   if (isDispatched) {
     timerLabel = '🛵 Arriving in'
     timerColor = '#9b59b6'
     timerBg = 'rgba(155,89,182,0.1)'
     timerBorder = 'rgba(155,89,182,0.4)'
-    timerSub = isLate
-      ? '⚠️ We use fresh ingredients, never frozen. Running a little late — sorry for the delay!'
-      : '🎉 We prepared your order fast. It\'s on the way!'
+    if (isLate) {
+      timerSub = '⚠️ Running a little late — we cook fresh, never frozen. Sorry for the wait!'
+    } else if (prepTookMins !== null && prepTookMins < (order.prep_mins || 30)) {
+      timerSub = `🔥 We prepared your order in just ${prepTookMins} min — it's on the way!`
+    } else {
+      timerSub = '🎉 Your order is freshly prepared and on the way!'
+    }
   } else if (isLate) {
     timerSub = '⚠️ Running a little late. Fresh food is worth the wait!'
   }

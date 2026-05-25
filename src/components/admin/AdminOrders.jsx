@@ -16,7 +16,12 @@ export default function AdminOrders({ orders, setOrders, onStatusChange }) {
   })
 
   async function updateStatus(id, status) {
-    const extra = status === 'dispatched' ? { dispatched_at: new Date().toISOString() } : {}
+    const now = new Date().toISOString()
+    const extra = status === 'dispatched'
+      ? { dispatched_at: now }
+      : status === 'accepted'
+      ? { accepted_at: now }
+      : {}
     const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString(), ...extra }).eq('id', id)
     if (!error) { setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o)); toast.success('Status updated') }
   }

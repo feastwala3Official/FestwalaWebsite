@@ -215,8 +215,8 @@ export default function CheckoutModal({ onClose }) {
 
     // Send emails (non-blocking)
     const trackUrl = `${CONFIG.siteUrl}/order/${orderId}?token=${trackToken}`
-    emailOrderToRestaurant(orderData).catch(() => {})
-    if (form.email.trim()) emailOrderToCustomer(orderData, form.email.trim(), trackUrl).catch(() => {})
+    emailOrderToRestaurant(orderData).catch(e => console.error('Restaurant email failed:', e))
+    if (form.email.trim()) emailOrderToCustomer(orderData, form.email.trim(), trackUrl).catch(e => console.error('Customer email failed:', e))
 
     if (CONFIG.sheetWebhook !== 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL') {
       fetch(CONFIG.sheetWebhook, {
