@@ -152,8 +152,8 @@ export default function Website() {
           {Array(6).fill(null).map((_, i) => (
             <span key={i} style={{ color: '#f5e6c8', fontSize: '13px', fontFamily: 'DM Sans', letterSpacing: '0.05em' }}>
               {settings?.announcement
-                ? `🍽️ ${settings.announcement} &nbsp;&nbsp;&nbsp;`
-                : `🍽️ Free Delivery on orders above ₹269 &nbsp;·&nbsp; 📞 9711386962 | 9217291488 &nbsp;·&nbsp; ⏰ 11 AM – 11 PM Daily &nbsp;&nbsp;&nbsp;`}
+                ? `🍽️ ${settings.announcement}   `
+                : `🍽️ Free Delivery on orders above ₹269  ·  📞 9711386962 | 9217291488  ·  ⏰ 11 AM – 11 PM Daily   `}
             </span>
           ))}
         </div>
@@ -247,8 +247,8 @@ export default function Website() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', maxWidth: '900px', margin: '0 auto' }}>
           {[
-            { label: 'Meal 1', price: 299, items: '4 Roti · Dal · Rice · Sabzi · Salad · Water Bottle', cta: 'Order Now' },
-            { label: 'Meal 2', price: 311, items: '6 Roti · Dal · Rice · Paneer Sabzi · Sweet · Salad+Raita · Water Bottle', cta: 'Order Now' },
+            { label: 'Meal 1', price: 139, items: '4 Roti · Dal · Rice · Sabzi · Salad · Water Bottle', cta: 'Order Now' },
+            { label: 'Meal 2', price: 169, items: '6 Roti · Dal · Rice · Paneer Sabzi · Sweet · Salad+Raita · Water Bottle', cta: 'Order Now' },
             { label: 'Monthly Plan', price: 120, unit: '/thali', items: '30 Days · Daily home-cooked thali · Free Masala Chai · Within 10km delivery', cta: 'Call for Details' }
           ].map((meal, i) => (
             <div key={i} style={{

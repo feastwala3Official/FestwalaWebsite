@@ -205,7 +205,11 @@ export default function CheckoutModal({ onClose }) {
       nearest_outlet: nearestOutlet.name
     }
 
-    await supabase.from('orders').insert(orderData)
+    const { error: insertError } = await supabase.from('orders').insert(orderData)
+    if (insertError) {
+      console.error('Order insert failed:', insertError)
+      throw new Error(insertError.message || 'Order save failed')
+    }
 
     // Send emails (non-blocking)
     const trackUrl = `${CONFIG.siteUrl}/order/${orderId}?token=${trackToken}`
