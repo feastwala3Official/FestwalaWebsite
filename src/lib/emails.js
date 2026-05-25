@@ -4,37 +4,32 @@
 
 import { CONFIG } from './supabase'
 
-const RESEND_KEY = CONFIG.resendKey
 const FROM = 'FeastWala <onboarding@resend.dev>'
 const RESTAURANT_EMAIL = 'feastwala3@gmail.com'
 
 async function sendEmail({ to, subject, html }) {
-  if (!RESEND_KEY || RESEND_KEY.startsWith('REPLACE')) {
-    console.log('Resend not configured')
-    return
-  }
-  // Resend sandbox: can only send to verified address (feastwala3@gmail.com)
-  // Until custom domain is set up, route all emails to restaurant
-  const safeTo = Array.isArray(to) ? to : [to]
-  const finalTo = safeTo.map(addr => {
-    if (addr === RESTAURANT_EMAIL) return addr
-    // sandbox restriction — send to restaurant with customer address in subject
-    return RESTAURANT_EMAIL
-  })
-  const dedupedTo = [...new Set(finalTo)]
+  // Calls Supabase Edge Function which has the Resend key server-side
+  // This avoids the Resend "Host not in allowlist" CORS/403 error from browser
+  const EDGE_URL = 'https://lqaasxstgsrrvdwlimdy.supabase.co/functions/v1/send-email'
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxYWFzeHN0Z3NycnZkd2xpbWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwOTMzNjIsImV4cCI6MjA5NDY2OTM2Mn0.XPOU0bE8u7gjL_svbaScCqd1pA4Vxh-K0wmT3yepqMA'
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch(EDGE_URL, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM, to: dedupedTo, subject, html })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+      },
+      body: JSON.stringify({ to, subject, html }),
     })
-    const result = await res.json()
+    const data = await res.json()
     if (!res.ok) {
-      console.error('Email failed:', result)
+      console.error('Email edge function failed:', data)
     } else {
-      console.log('Email sent:', result.id, '→', dedupedTo)
+      console.log('Email sent via edge function:', data.id)
     }
-  } catch (e) { console.error('Email error:', e) }
+  } catch (e) {
+    console.error('Email error:', e)
+  }
 }
 
 const wrap = (inner) => `
