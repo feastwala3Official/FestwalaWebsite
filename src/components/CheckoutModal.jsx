@@ -267,7 +267,16 @@ export default function CheckoutModal({ onClose }) {
           description: 'Food Order',
           prefill: { name: form.name, contact: form.phone, email: form.email },
           theme: { color: '#c9a84c' },
-          handler: async res => { await placeOrder(res.razorpay_payment_id); setLoading(false) },
+          handler: async res => {
+            try {
+              await placeOrder(res.razorpay_payment_id)
+            } catch (err) {
+              console.error('Order save after payment failed:', err)
+              toast.error('Payment done but order save failed. Please WhatsApp us with payment ID: ' + res.razorpay_payment_id)
+            } finally {
+              setLoading(false)
+            }
+          },
           modal: { ondismiss: () => setLoading(false) }
         })
         rzp.on('payment.failed', () => {
@@ -280,7 +289,8 @@ export default function CheckoutModal({ onClose }) {
         await placeOrder()
         setLoading(false)
       }
-    } catch {
+    } catch (err) {
+      console.error('Order error:', err)
       toast.error('Something went wrong. Please try again.')
       setLoading(false)
     }

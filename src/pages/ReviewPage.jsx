@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { emailReviewNotification } from '../lib/emails'
 import toast from 'react-hot-toast'
 
 function CursorFollower() {
@@ -82,6 +83,9 @@ export default function ReviewPage() {
 
     setSubmitted(true)
     toast.success('Thank you for your review! 🎉')
+
+    // Notify restaurant
+    emailReviewNotification(reviewData).catch(() => {})
   }
 
   const starLabels = ['', 'Poor 😕', 'Fair 😐', 'Good 🙂', 'Great 😊', 'Excellent! 🤩']

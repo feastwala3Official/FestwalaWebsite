@@ -32,6 +32,8 @@ export default function OrderStatusPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [remaining, setRemaining] = useState(null)
+  const [canCancel, setCanCancel] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -75,6 +77,30 @@ export default function OrderStatusPage() {
     const interval = setInterval(tick, 30000)
     return () => clearInterval(interval)
   }, [order])
+
+  // Cancel window: only allow within 3 minutes of order creation
+  useEffect(() => {
+    if (!order || order.status !== 'pending') return
+    const created = new Date(order.created_at).getTime()
+    const checkWindow = () => {
+      const elapsed = Date.now() - created
+      setCanCancel(elapsed < 3 * 60 * 1000)
+    }
+    checkWindow()
+    const interval = setInterval(checkWindow, 5000)
+    return () => clearInterval(interval)
+  }, [order])
+
+  async function handleCancel() {
+    if (!canCancel || cancelling) return
+    setCancelling(true)
+    const { error } = await supabase.from('orders').update({ status: 'cancelled' }).eq('order_id', order.order_id)
+    if (error) {
+      console.error('Cancel failed:', error)
+      alert('Could not cancel. Please call +91 9711386962.')
+    }
+    setCancelling(false)
+  }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0a0500', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c', fontFamily: 'DM Sans' }}>
@@ -135,6 +161,30 @@ export default function OrderStatusPage() {
                 <div style={{ fontSize: '2.5rem' }}>🎉</div>
                 <h2 style={{ color: '#27ae60', fontFamily: 'Cormorant Garamond', fontSize: '24px', margin: '0.5rem 0' }}>Delivered!</h2>
                 <p style={{ color: '#c8b89a', fontSize: '14px' }}>We hope you enjoy your meal</p>
+              </div>
+            )}
+
+            {/* Cancel button — only within 3 mins of pending */}
+            {order.status === 'pending' && canCancel && (
+              <div style={{ background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.25)', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+                <p style={{ color: '#c8b89a', fontSize: '13px', marginBottom: '0.75rem' }}>
+                  Changed your mind? You can cancel within <strong style={{ color: '#c9a84c' }}>3 minutes</strong> of placing the order.
+                </p>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  style={{ background: cancelling ? 'rgba(192,57,43,0.4)' : '#c0392b', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 24px', fontWeight: 700, fontSize: '14px', fontFamily: 'DM Sans' }}
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel Order'}
+                </button>
+              </div>
+            )}
+
+            {order.status === 'pending' && !canCancel && (
+              <div style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.1)', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+                <p style={{ color: '#8a7a65', fontSize: '12px' }}>
+                  Cancellation window has passed. Call <strong style={{ color: '#c9a84c' }}>+91 9711386962</strong> for help.
+                </p>
               </div>
             )}
 
