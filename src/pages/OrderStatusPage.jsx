@@ -111,6 +111,27 @@ export default function OrderStatusPage() {
   const isCancelled = order.status === 'cancelled'
   const isDelivered = order.status === 'delivered'
 
+  // Calculate how long since order was placed and since dispatched
+  const minSinceOrder = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)
+  const minSinceDispatched = order.status_updated_at && order.status === 'dispatched'
+    ? Math.floor((Date.now() - new Date(order.status_updated_at).getTime()) / 60000)
+    : null
+
+  // Dynamic message based on status and timing
+  function getStatusMessage() {
+    if (order.status === 'pending') return { text: 'We have received your order and will start preparing shortly!', color: '#e67e22', emoji: '📝' }
+    if (order.status === 'accepted') return { text: 'Your food is being freshly prepared right now. We never use frozen food. That is why it tastes better!', color: '#c9a84c', emoji: '🍳' }
+    if (order.status === 'dispatched') {
+      if (minSinceOrder < 28) return { text: 'Dispatched early! Your order is on its way faster than expected.', color: '#27ae60', emoji: '🚀' }
+      if (minSinceOrder <= 40) return { text: 'Your order is on the way! Our delivery partner is heading to you.', color: '#3498db', emoji: '🛵' }
+      return { text: 'We are sorry for the wait — your order is on the way now! Thank you for your patience.', color: '#e67e22', emoji: '⏳' }
+    }
+    if (order.status === 'delivered') return { text: 'Delivered! We hope you enjoy your meal.', color: '#27ae60', emoji: '🎉' }
+    return null
+  }
+
+  const statusMsg = getStatusMessage()
+
   return (
     <div style={{ minHeight: '100vh', background: '#0a0500', fontFamily: 'DM Sans', padding: '2rem 1rem' }}>
       <CursorFollower />
@@ -129,14 +150,32 @@ export default function OrderStatusPage() {
           </div>
         ) : (
           <>
+            {/* Status message */}
+            {statusMsg && (
+              <div style={{ background: `${statusMsg.color}18`, border: `1px solid ${statusMsg.color}44`, borderRadius: '12px', padding: '1rem 1.2rem', marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '20px', flexShrink: 0 }}>{statusMsg.emoji}</span>
+                <p style={{ color: statusMsg.color, fontSize: '14px', lineHeight: 1.6, fontWeight: 500 }}>{statusMsg.text}</p>
+              </div>
+            )}
+
             {/* Countdown */}
             {!isDelivered && remaining !== null && (
               <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
-                <p style={{ color: '#c8b89a', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Estimated arrival in</p>
-                <p style={{ fontFamily: 'Cormorant Garamond', fontSize: '48px', fontWeight: 700, color: '#c9a84c', lineHeight: 1.1, margin: '0.3rem 0' }}>
-                  {remaining > 0 ? `${remaining} min` : 'Any moment'}
+                <p style={{ color: '#c8b89a', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  {order.status === 'dispatched' ? 'Arriving in' : 'Estimated delivery in'}
                 </p>
-                <p style={{ color: '#8a7a65', fontSize: '12px' }}>We prepare everything fresh — never frozen</p>
+                <p style={{ fontFamily: 'Cormorant Garamond', fontSize: '48px', fontWeight: 700, color: '#c9a84c', lineHeight: 1.1, margin: '0.3rem 0' }}>
+                  {remaining > 0 ? `${remaining} min` : 'Any moment now'}
+                </p>
+                <p style={{ color: '#8a7a65', fontSize: '12px' }}>
+                  {order.status === 'accepted' ? 'Freshly prepared — never frozen' : 'On the way to you'}
+                </p>
+                {order.status === 'dispatched' && minSinceOrder < 28 && (
+                  <p style={{ color: '#27ae60', fontSize: '11px', marginTop: '6px', fontWeight: 600 }}>Dispatched ahead of schedule!</p>
+                )}
+                {order.status === 'dispatched' && minSinceOrder > 40 && (
+                  <p style={{ color: '#e67e22', fontSize: '11px', marginTop: '6px' }}>Running a bit late — thank you for your patience</p>
+                )}
               </div>
             )}
 
