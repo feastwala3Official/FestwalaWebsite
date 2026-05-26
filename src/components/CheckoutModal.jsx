@@ -155,7 +155,7 @@ export default function CheckoutModal({ onClose }) {
       const driveWithBuffer = driveMin + CONFIG.bufferMins
       const totalTime = CONFIG.prepTimeMins + driveWithBuffer
       const timeText = `~${totalTime} mins (${CONFIG.prepTimeMins} min prep + ${driveWithBuffer} min delivery)`
-      setLocData({ lat, lng, distance, outlet: nearest, canDeliver, timeText, driveWithBuffer })
+      setLocData({ lat, lng, distance, outlet: nearest, canDeliver, timeText })
 
       // Reset session token for next search
       const { AutocompleteSessionToken } = await window.google.maps.importLibrary('places')
@@ -199,24 +199,18 @@ export default function CheckoutModal({ onClose }) {
       payment_id: paymentId,
       status: 'pending',
       estimated_time: locData?.timeText || '30-45 mins',
-      prep_mins: CONFIG.prepTimeMins,
-      delivery_mins: locData?.driveWithBuffer || 20,
       customer_lat: locData?.lat || null,
       customer_lng: locData?.lng || null,
       distance_from_outlet: locData?.distance || null,
       nearest_outlet: nearestOutlet.name
     }
 
-    const { error: insertError } = await supabase.from('orders').insert(orderData)
-    if (insertError) {
-      console.error('Order insert failed:', insertError)
-      throw new Error(insertError.message || 'Order save failed')
-    }
+    await supabase.from('orders').insert(orderData)
 
     // Send emails (non-blocking)
     const trackUrl = `${CONFIG.siteUrl}/order/${orderId}?token=${trackToken}`
-    emailOrderToRestaurant(orderData).catch(e => console.error('Restaurant email failed:', e))
-    if (form.email.trim()) emailOrderToCustomer(orderData, form.email.trim(), trackUrl).catch(e => console.error('Customer email failed:', e))
+    emailOrderToRestaurant(orderData).catch(() => {})
+    if (form.email.trim()) emailOrderToCustomer(orderData, form.email.trim(), trackUrl).catch(() => {})
 
     if (CONFIG.sheetWebhook !== 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL') {
       fetch(CONFIG.sheetWebhook, {
@@ -226,15 +220,7 @@ export default function CheckoutModal({ onClose }) {
       }).catch(() => {})
     }
 
-    // WhatsApp notification to restaurant (background only, no popup for customer)
-    const itemList = items.map(i => `• ${i.name} x${i.qty} = ₹${i.price * i.qty}`).join('\n')
-    const mapsLink = locData ? `\n📍 https://maps.google.com/?q=${locData.lat},${locData.lng} (${locData.distance}km)` : ''
-    const msgToUs = `🍽️ *New Order — FeastWala*\n\n*ID:* ${orderId}\n*Name:* ${form.name}\n*Phone:* ${form.phone}\n*Address:* ${fullAddress}${mapsLink}\n*Type:* ${form.orderType}\n*Payment:* ${form.payment}${paymentId ? ' ✅ Paid' : ''}\n\n*Items:*\n${itemList}\n\n*Total:* ₹${grandTotal}\n*Est. Time:* ${locData?.timeText || '30-45 mins'}`
-    try {
-      const waWindow = window.open(`https://wa.me/${nearestOutlet.whatsapp}?text=${encodeURIComponent(msgToUs)}`, '_blank')
-      if (waWindow) { waWindow.blur(); setTimeout(() => { try { waWindow.close() } catch(e){} }, 2000) }
-      window.focus()
-    } catch(e) { console.log('WA background ping failed:', e) }
+    // Restaurant notified via Resend email — no WhatsApp popup on customer screen
 
     setPlacedOrder({
       orderId, name: form.name, total: grandTotal,
@@ -271,16 +257,7 @@ export default function CheckoutModal({ onClose }) {
           description: 'Food Order',
           prefill: { name: form.name, contact: form.phone, email: form.email },
           theme: { color: '#c9a84c' },
-          handler: async res => {
-            try {
-              await placeOrder(res.razorpay_payment_id)
-            } catch (err) {
-              console.error('Order save after payment failed:', err)
-              toast.error('Payment done but order save failed. Please WhatsApp us with payment ID: ' + res.razorpay_payment_id)
-            } finally {
-              setLoading(false)
-            }
-          },
+          handler: async res => { await placeOrder(res.razorpay_payment_id); setLoading(false) },
           modal: { ondismiss: () => setLoading(false) }
         })
         rzp.on('payment.failed', () => {
@@ -293,8 +270,7 @@ export default function CheckoutModal({ onClose }) {
         await placeOrder()
         setLoading(false)
       }
-    } catch (err) {
-      console.error('Order error:', err)
+    } catch {
       toast.error('Something went wrong. Please try again.')
       setLoading(false)
     }

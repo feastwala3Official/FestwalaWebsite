@@ -16,29 +16,8 @@ export default function AdminOrders({ orders, setOrders, onStatusChange }) {
   })
 
   async function updateStatus(id, status) {
-    const now = new Date().toISOString()
-    const extra = status === 'dispatched'
-      ? { dispatched_at: now }
-      : status === 'accepted'
-      ? { accepted_at: now }
-      : {}
-    console.log('Updating order', id, 'to', status, 'with', extra)
-    // Optimistic update first so UI reflects change immediately
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...extra } : o))
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ status, updated_at: now, ...extra })
-      .eq('id', id)
-      .select()
-    if (error) {
-      console.error('Status update failed:', error)
-      toast.error('Update failed: ' + error.message)
-      // Revert optimistic update on failure
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: o.status } : o))
-      return
-    }
-    console.log('Update result:', data)
-    toast.success('Status updated')
+    const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    if (!error) { setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o)); toast.success('Status updated') }
   }
 
   function exportCSV() {
@@ -118,7 +97,11 @@ function OrderCard({ order, onStatusChange, onWhatsApp }) {
           </div>
           {order.address && <p style={{ color: '#c8b89a', fontSize: '13px', marginBottom: '1rem' }}>📍 {order.address}</p>}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <select value={order.status} onChange={e => { onStatusChange(order.id, e.target.value); if (onWhatsApp) onWhatsApp(order, e.target.value) }}
+            <select value={order.status} onChange={async e => {
+                const newStatus = e.target.value
+                await onStatusChange(order.id, newStatus)
+                if (onWhatsApp) onWhatsApp({ ...order, status: newStatus }, newStatus)
+              }}
               style={{ background: '#1a0a00', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '6px', padding: '8px 12px', color: '#c9a84c', fontFamily: 'DM Sans', fontSize: '13px' }}>
               {['pending','accepted','dispatched','delivered','cancelled'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
             </select>
