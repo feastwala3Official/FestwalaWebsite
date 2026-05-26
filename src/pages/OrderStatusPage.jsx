@@ -183,6 +183,31 @@ export default function OrderStatusPage() {
               </div>
             )}
 
+            {/* Cancel button — right below countdown, only when pending < 3 min */}
+            {canCancel && (
+              <div style={{ background: 'rgba(192,57,43,0.06)', border: '1px solid rgba(192,57,43,0.25)', borderRadius: '16px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                <div>
+                  <p style={{ color: '#c0392b', fontSize: '14px', fontWeight: 600 }}>Want to cancel?</p>
+                  <p style={{ color: '#8a7a65', fontSize: '12px', marginTop: '2px' }}>You can cancel before we start preparing</p>
+                </div>
+                <button onClick={async () => {
+                  if (!confirm('Cancel this order?')) return
+                  const { error } = await supabase.from('orders')
+                    .update({ status: 'cancelled', status_updated_at: new Date().toISOString() })
+                    .eq('order_id', order.order_id)
+                  if (!error) toast.success('Order cancelled')
+                  else toast.error('Could not cancel. Please call us.')
+                }} style={{
+                  background: '#c0392b', border: 'none', borderRadius: '10px',
+                  padding: '10px 20px', color: 'white', fontWeight: 700,
+                  fontSize: '14px', fontFamily: 'DM Sans', cursor: 'pointer',
+                  flexShrink: 0, whiteSpace: 'nowrap'
+                }}>
+                  Cancel Order
+                </button>
+              </div>
+            )}
+
             {isDelivered && (
               <div style={{ background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.3)', borderRadius: '16px', padding: '1.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '2.5rem' }}>🎉</div>
@@ -239,29 +264,6 @@ export default function OrderStatusPage() {
         <div style={{ textAlign: 'center' }}>
           <a href={`https://wa.me/919711386962?text=${encodeURIComponent(`Hi, regarding my order ${order.order_id}`)}`} target="_blank"
             style={{ color: '#25d366', fontSize: '13px', textDecoration: 'none' }}>Need help? Chat with us 💬</a>
-
-          {/* Cancel button — pending AND within 3 minutes */}
-          {canCancel && (
-            <div style={{ marginTop: '1.5rem' }}>
-              <button onClick={async () => {
-                if (!confirm('Are you sure you want to cancel this order?')) return
-                const { error } = await supabase.from('orders')
-                  .update({ status: 'cancelled', status_updated_at: new Date().toISOString() })
-                  .eq('order_id', order.order_id)
-                if (!error) toast.success('Order cancelled')
-                else toast.error('Could not cancel. Please call us.')
-              }} style={{
-                background: 'rgba(192,57,43,0.1)', border: '1px solid rgba(192,57,43,0.3)',
-                borderRadius: '8px', padding: '10px 24px', color: '#c0392b',
-                fontSize: '13px', fontFamily: 'DM Sans', cursor: 'pointer'
-              }}>
-                Cancel Order
-              </button>
-              <p style={{ color: '#8a7a65', fontSize: '11px', marginTop: '6px' }}>
-                You can cancel within 3 minutes of placing the order
-              </p>
-            </div>
-          )}
 
           <p style={{ marginTop: '1rem' }}>
             <a href="/" style={{ color: '#c9a84c', fontSize: '13px', textDecoration: 'none' }}>← Back to FeastWala</a>
