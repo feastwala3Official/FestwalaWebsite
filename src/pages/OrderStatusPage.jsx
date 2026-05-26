@@ -235,6 +235,34 @@ export default function OrderStatusPage() {
         <div style={{ textAlign: 'center' }}>
           <a href={`https://wa.me/919711386962?text=${encodeURIComponent(`Hi, regarding my order ${order.order_id}`)}`} target="_blank"
             style={{ color: '#25d366', fontSize: '13px', textDecoration: 'none' }}>Need help? Chat with us 💬</a>
+
+          {/* Cancel button — only when pending AND within 2 minutes */}
+          {order.status === 'pending' && minSinceOrder < 2 && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <button onClick={async () => {
+                if (!confirm('Are you sure you want to cancel this order?')) return
+                await import('../lib/supabase').then(({ supabase }) =>
+                  supabase.from('orders').update({ status: 'cancelled', status_updated_at: new Date().toISOString() }).eq('order_id', order.order_id)
+                )
+              }} style={{
+                background: 'rgba(192,57,43,0.1)', border: '1px solid rgba(192,57,43,0.3)',
+                borderRadius: '8px', padding: '10px 24px', color: '#c0392b',
+                fontSize: '13px', fontFamily: 'DM Sans', cursor: 'pointer'
+              }}>
+                Cancel Order
+              </button>
+              <p style={{ color: '#8a7a65', fontSize: '11px', marginTop: '6px' }}>
+                You can cancel within 2 minutes of placing the order
+              </p>
+            </div>
+          )}
+
+          {order.status === 'pending' && minSinceOrder >= 2 && (
+            <p style={{ color: '#8a7a65', fontSize: '12px', marginTop: '1.5rem' }}>
+              Order is being prepared — cancellation window has passed. Call us if you need help.
+            </p>
+          )}
+
           <p style={{ marginTop: '1rem' }}>
             <a href="/" style={{ color: '#c9a84c', fontSize: '13px', textDecoration: 'none' }}>← Back to FeastWala</a>
           </p>
