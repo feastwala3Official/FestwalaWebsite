@@ -113,7 +113,10 @@ export default function OrderStatusPage() {
   const isDelivered = order.status === 'delivered'
 
   // Calculate how long since order was placed and since dispatched
-  const minSinceOrder = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)
+  // Use UTC timestamps properly — Supabase stores in UTC, new Date() parses UTC correctly
+  const orderAgeMs = Date.now() - new Date(order.created_at).getTime()
+  const minSinceOrder = Math.floor(orderAgeMs / 60000)
+  const canCancel = order.status === 'pending' && orderAgeMs < 3 * 60 * 1000
   const minSinceDispatched = order.status_updated_at && order.status === 'dispatched'
     ? Math.floor((Date.now() - new Date(order.status_updated_at).getTime()) / 60000)
     : null
@@ -237,8 +240,8 @@ export default function OrderStatusPage() {
           <a href={`https://wa.me/919711386962?text=${encodeURIComponent(`Hi, regarding my order ${order.order_id}`)}`} target="_blank"
             style={{ color: '#25d366', fontSize: '13px', textDecoration: 'none' }}>Need help? Chat with us 💬</a>
 
-          {/* Cancel button — only when pending AND within 2 minutes */}
-          {order.status === 'pending' && minSinceOrder < 2 && (
+          {/* Cancel button — pending AND within 3 minutes */}
+          {canCancel && (
             <div style={{ marginTop: '1.5rem' }}>
               <button onClick={async () => {
                 if (!confirm('Are you sure you want to cancel this order?')) return
@@ -255,15 +258,9 @@ export default function OrderStatusPage() {
                 Cancel Order
               </button>
               <p style={{ color: '#8a7a65', fontSize: '11px', marginTop: '6px' }}>
-                You can cancel within 2 minutes of placing the order
+                You can cancel within 3 minutes of placing the order
               </p>
             </div>
-          )}
-
-          {order.status === 'pending' && minSinceOrder >= 2 && (
-            <p style={{ color: '#8a7a65', fontSize: '12px', marginTop: '1.5rem' }}>
-              Order is being prepared — cancellation window has passed. Call us if you need help.
-            </p>
           )}
 
           <p style={{ marginTop: '1rem' }}>
