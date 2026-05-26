@@ -20,7 +20,7 @@ export default function AdminSettings() {
       })
   }, [])
 
-  // Initialize with '0' — synced to real values once settings load from Supabase
+  // Initialize with '0' strings — synced after Supabase loads settings
   const [discountRaw, setDiscountRaw] = useState({
     global_discount_pct: '0',
     thali_discount_pct: '0',
