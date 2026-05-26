@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import toast from 'react-hot-toast'
 
 function CursorFollower() {
   useEffect(() => {
@@ -241,9 +242,11 @@ export default function OrderStatusPage() {
             <div style={{ marginTop: '1.5rem' }}>
               <button onClick={async () => {
                 if (!confirm('Are you sure you want to cancel this order?')) return
-                await import('../lib/supabase').then(({ supabase }) =>
-                  supabase.from('orders').update({ status: 'cancelled', status_updated_at: new Date().toISOString() }).eq('order_id', order.order_id)
-                )
+                const { error } = await supabase.from('orders')
+                  .update({ status: 'cancelled', status_updated_at: new Date().toISOString() })
+                  .eq('order_id', order.order_id)
+                if (!error) toast.success('Order cancelled')
+                else toast.error('Could not cancel. Please call us.')
               }} style={{
                 background: 'rgba(192,57,43,0.1)', border: '1px solid rgba(192,57,43,0.3)',
                 borderRadius: '8px', padding: '10px 24px', color: '#c0392b',
