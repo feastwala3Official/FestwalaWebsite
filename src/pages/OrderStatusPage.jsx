@@ -64,16 +64,15 @@ export default function OrderStatusPage() {
     if (m) totalMins = parseInt(m[1], 10)
     if (order.accepted_eta_mins) totalMins = order.accepted_eta_mins
 
-    // Once accepted/dispatched, count down from when status last changed
-    // This prevents "time already expired" when customer checks status later
-    const baseTime = order.status === 'pending'
-      ? new Date(order.created_at).getTime()
-      : new Date(order.status_updated_at || order.created_at).getTime()
+    // pending/accepted: count from order creation with full time (prep still happening)
+    // dispatched: count from when dispatched with delivery portion only (food is on the way)
+    const baseTime = order.status === 'dispatched'
+      ? new Date(order.status_updated_at || order.created_at).getTime()
+      : new Date(order.created_at).getTime()
 
-    // For pending: full time. For accepted: delivery time only (subtract 30 min prep)
-    const remainingMins = order.status === 'pending'
-      ? totalMins
-      : Math.max(15, totalMins - 30) // at minimum 15 mins after accepted
+    const remainingMins = order.status === 'dispatched'
+      ? Math.max(10, totalMins - 30) // delivery time only once out for delivery
+      : totalMins // full time for pending and accepted
 
     const target = baseTime + remainingMins * 60 * 1000
 

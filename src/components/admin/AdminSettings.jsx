@@ -6,6 +6,13 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState(null)
   const [saving, setSaving] = useState(false)
 
+  // Must be declared BEFORE the useEffect that calls setDiscountRaw
+  const [discountRaw, setDiscountRaw] = useState({
+    global_discount_pct: '0',
+    thali_discount_pct: '0',
+    chinese_discount_pct: '0'
+  })
+
   useEffect(() => {
     supabase.from('settings').select('*').single()
       .then(({ data }) => {
@@ -19,13 +26,6 @@ export default function AdminSettings() {
         }
       })
   }, [])
-
-  // Initialize with '0' strings — synced after Supabase loads settings
-  const [discountRaw, setDiscountRaw] = useState({
-    global_discount_pct: '0',
-    thali_discount_pct: '0',
-    chinese_discount_pct: '0'
-  })
 
   function handleDiscountChange(key, raw) {
     // Allow free typing — just update the raw string
