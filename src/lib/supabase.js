@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
-import 'dotenv/config'
+// import 'dotenv/config'
 
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   realtime: { params: { eventsPerSecond: 10 } },
@@ -32,10 +32,10 @@ export const OUTLETS = [
 export const CONFIG = {
   whatsapp: '919711386962',
   email: 'feastwala3@gmail.com',
-  razorpayKey: process.env.RAZORPAY_KEY,
+  razorpayKey: import.meta.env.VITE_RAZORPAY_KEY,
   sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL',
-  googleMapsKey: process.env.GOOGLE_MAPS_KEY,
-  resendKey: process.env.RESEND_KEY,
+  googleMapsKey: import.meta.env.VITE_GOOGLE_MAPS_KEY,
+  resendKey: import.meta.env.VITE_RESEND_KEY,
   siteUrl: 'https://feastwala-website.vercel.app',
   prepTimeMins: 30,
   bufferMins: 5
