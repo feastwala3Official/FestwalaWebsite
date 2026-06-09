@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import 'dotenv/config'
 
-const SUPABASE_URL = 'https://lqaasxstgsrrvdwlimdy.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxYWFzeHN0Z3NycnZkd2xpbWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwOTMzNjIsImV4cCI6MjA5NDY2OTM2Mn0.XPOU0bE8u7gjL_svbaScCqd1pA4Vxh-K0wmT3yepqMA'
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   realtime: { params: { eventsPerSecond: 10 } },
@@ -30,10 +32,10 @@ export const OUTLETS = [
 export const CONFIG = {
   whatsapp: '919711386962',
   email: 'feastwala3@gmail.com',
-  razorpayKey: 'rzp_test_Sr9OtBXtzzgTFE',
+  razorpayKey: process.env.RAZORPAY_KEY,
   sheetWebhook: 'REPLACE_WITH_YOUR_APPS_SCRIPT_URL',
-  googleMapsKey: 'AIzaSyDZs3QHtvnZVjXgOiQEfwOSZcEdRv5lmwE',
-  resendKey: 're_aoWmRZbq_K1w8pFJzRKxRaxwL99hBJvHe',
+  googleMapsKey: process.env.GOOGLE_MAPS_KEY,
+  resendKey: process.env.RESEND_KEY,
   siteUrl: 'https://feastwala-website.vercel.app',
   prepTimeMins: 30,
   bufferMins: 5
